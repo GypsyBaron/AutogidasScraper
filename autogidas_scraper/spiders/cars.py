@@ -1,4 +1,5 @@
 import scrapy
+import logging
 from autogidas_scraper.items import AutogidasScraperItem
 from scrapy.loader import ItemLoader
 from urllib.parse import urljoin
@@ -11,7 +12,7 @@ class CarsSpider(scrapy.Spider):
     allowed_domains = ["autogidas.lt"]
 
     start_urls = [
-        'https://autogidas.lt/skelbimai/automobiliai/?f_1%5B0%5D=&f_model_14%5B0%5D=&f_215=&f_216=&f_41=&f_42=&f_376='
+        'https://autogidas.lt/skelbimai/automobiliai/?f_1[0]=&f_model_14[0]=&f_50=kaina_asc&page='
     ]
 
     def parse(self, response):
@@ -19,6 +20,7 @@ class CarsSpider(scrapy.Spider):
         if CarsSpider.item_counter < 200:
             for link in response.xpath("//div[(contains(@class, 'list-item') and not(contains(@class, 'breadcrumb-list-item')))]/a/@href").extract():
                 url = urljoin(response.url, link)
+                CarsSpider.item_counter+= 1
                 yield scrapy.Request(url = url, callback = self.parse_car)
             next_page = (CarsSpider.start_urls[0] + str(CarsSpider.page_number))
             yield scrapy.Request(url = next_page, callback = self.parse)
@@ -31,6 +33,7 @@ class CarsSpider(scrapy.Spider):
         l = ItemLoader(item = AutogidasScraperItem(), selector=info)
         l.add_xpath('marke', ".//div[contains(@class, 'left') and contains(text(),'Markė')]/following-sibling::div[1]/text()")
         l.add_xpath('modelis', ".//div[contains(@class, 'left') and contains(text(),'Modelis')]/following-sibling::div[1]/text()")
+        l.add_xpath('kaina', ".//div[@class='price']/text()")
         l.add_xpath('metai', ".//div[contains(@class, 'left') and contains(text(),'Metai')]/following-sibling::div[1]/text()")
         l.add_xpath('variklis', ".//div[contains(@class, 'left') and contains(text(),'Variklis')]/following-sibling::div[1]/text()")
         l.add_xpath('kuro_tipas', ".//div[contains(@class, 'left') and contains(text(),'Kuro tipas')]/following-sibling::div[1]/text()")
@@ -52,7 +55,6 @@ class CarsSpider(scrapy.Spider):
         l.add_xpath('euro_standartas', ".//div[contains(@class, 'left') and contains(text(),'Euro standartas')]/following-sibling::div[1]/text()")
         l.add_xpath('pirmoji_registracijos_salis', ".//div[contains(@class, 'left') and contains(text(),'Pirmosios registracijos šalis')]/following-sibling::div[1]/text()")
         l.add_xpath('ta', ".//div[contains(@class, 'left') and contains(text(),'TA iki')]/following-sibling::div[1]/text()")
-        CarsSpider.item_counter+= 1
         yield l.load_item()
 
         

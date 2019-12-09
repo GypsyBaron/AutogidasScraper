@@ -12,6 +12,9 @@ from w3lib.html import remove_tags
 def remove_whitespace(value):
     return value.strip()
 
+def remove_whitespace_inside(value):
+    return value.replace(" ", "")
+
 class AutogidasScraperItem(scrapy.Item):
     marke = scrapy.Field(
         input_processor = MapCompose(remove_tags, remove_whitespace),
@@ -19,6 +22,10 @@ class AutogidasScraperItem(scrapy.Item):
     )
     modelis = scrapy.Field(
         input_processor = MapCompose(remove_tags, remove_whitespace),
+        output_processor = TakeFirst()
+    )
+    kaina = scrapy.Field(
+        input_processor = MapCompose(remove_tags, remove_whitespace, remove_whitespace_inside),
         output_processor = TakeFirst()
     )
     metai = scrapy.Field(
